@@ -47,22 +47,28 @@ def gameLoop():
     x = (WIDTH * 0.38)
     y = (HEIGHT * 0.75)
     x_change = 10 # how much change in the x position. Increase to go faster
+
     # define a collision point at the middle of catchImg (for now)
     # note: these values will vary heavily depending on the image
     collisionPointMid = (x + CATCH_WIDTH/2, y+20) # -20 is the dist from the head to the bag LUL
 
     catcher = MovingObject(x, y, x_change, CATCH_WIDTH, CATCH_HEIGHT) 
-    catcher.setCollisionPoint(collisionPointMid) 
+    catcher.setCollisionPoints([collisionPointMid]) 
 
+    things = []
     thingStartX = random.randrange(0, WIDTH)
-    thingStartY = -600 # start a fair bit off screen at first
-    thingSpeed = 3
+    thingStartY = random.randrange(-600, 0) # start a fair bit off screen at first
+    thingSpeed = 10
     thingWidth = 100
     thingHeight = 100
-    thing = MovingObject(thingStartX, thingStartY, thingSpeed, thingWidth, thingHeight)
+    numThings = 2
 
-    #thingCount = n # to do: have a loop for multiple things (make sure it's still doable tho)\
+    for i in range(numThings):
+        things.append(MovingObject(random.randrange(0, WIDTH), random.randrange(-600,0), thingSpeed, thingWidth, thingHeight))
+
+    #thingCount = n # to do: have a loop for multiple things (make sure it's still doable tho)
     # todo 2: add blocks that will decrease your score
+    # consider: adding these initialization variables to the top
 
     caught = 0
 
@@ -107,33 +113,31 @@ def gameLoop():
            
         # prevents moving out of bounds
         catcher.checkOutOfBounds(WIDTH)
+
+        # Update collision points
+        catcher.setCollisionPoints( [(catcher.objX + CATCH_WIDTH/2, catcher.objY+20)] ) 
         
         # display the catcher
         catcher.blitObj(gameDisplay, catchImg)
         
-        # Update collision point 
-        catcher.setCollisionPoint( (catcher.objX + CATCH_WIDTH/2, catcher.objY+20) ) 
-        
         # display the (falling) thing
-        thing.drawObj(gameDisplay, WHITE)
-        thing.moveDown()
-         
+        for thing in things:
+            thing.drawObj(gameDisplay, WHITE)
+            thing.moveDown()
 
-        # OR, when a thingStartY + thingHeight comes to y + 20 (height of our catch bag), 
-        # check if a collision point x exists between thingStartX and thingStartX + thingWidth
-        if (thing.objY + thing.objHeight >= catcher.objY+20):
-            if ((catcher.collisionPoint[0] >= thing.objY) and (catcher.collisionPoint[0] <= thing.objY + thing.objHeight)):
-                thing.setY(0-thing.objY/2)
+            # when a thingStartY + thingHeight comes to y + 20 (height of our catch bag), 
+            # check if a collision point x exists between thingStartX and thingStartX + thingWidth
+            if (catcher.checkVerticalCollision(thing)): 
+                thing.setY(random.randrange(-300, -100))
                 thing.setX(random.randrange(0, WIDTH))
                 caught +=1
-                
-
-        # repeat the thing in a new location if it leaves the screen
-        if (thing.objY > HEIGHT):
-            messageDisplay('LUL', CENTER) # LUL
-            thing.setY(0-thing.objY)
-            thing.setX(random.randrange(0, WIDTH))
-
+            
+             # repeat the thing in a new location if it leaves the screen
+            if (thing.objY > HEIGHT):
+                messageDisplay('>..<', CENTER) # LUL
+                thing.setY(random.randrange(-300, -100))
+                thing.setX(random.randrange(0, WIDTH))
+            
         thingsCaught(caught) 
         pygame.display.update()
         clock.tick(60)
